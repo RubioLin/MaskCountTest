@@ -13,15 +13,15 @@ class ViewController: UIViewController {
     @IBOutlet weak var dailyPhraseinEnglishLabel: UILabel!
     @IBOutlet weak var maskCountTableView: UITableView!
     @IBOutlet weak var selectedCountyTownButton: UIButton!
-    
     let countyTownPickerView = UIPickerView(frame: .zero)
-    let activityIndicator = UIActivityIndicatorView(frame: CGRect(x: .zero, y: .zero, width: 500, height: 500))
+    let activityIndicator = UIActivityIndicatorView()
     
+    // TableView 要用的資料
     var clinicInfo = [ClinicInfo?]()
-    var countyTownInfo = [CountyTown]()
-
-    var index = 0
+    // PickerView 要用的資料
     var buttonTitle = ""
+    var countyTownInfo = [CountyTown]()
+    var index = 0
     var selectCounty: CountyTown {
         get { return countyTownInfo[index] }
     }
@@ -31,8 +31,8 @@ class ViewController: UIViewController {
         self.setupMaskCountTableView()
         self.setupCountyTownPickerView()
         NetworkManager.shared.fetchDailyPhrase()
+        self.setActivityIndicator()
         NetworkManager.shared.fetchMaskCount{ clinicInfo, countyTownInfo in
-            self.setActivityIndicator()
             DispatchQueue.main.async {
                 self.countyTownInfo = countyTownInfo
                 self.clinicInfo = clinicInfo
@@ -40,7 +40,6 @@ class ViewController: UIViewController {
                 self.activityIndicator.stopAnimating()
             }
         }
-
     }
     
     override func viewDidLayoutSubviews() {
@@ -51,51 +50,70 @@ class ViewController: UIViewController {
     // 功能待補
     private func setActivityIndicator() {
         DispatchQueue.main.async {
+            self.activityIndicator.style = .large
+            self.activityIndicator.color = .gray
+            self.activityIndicator.backgroundColor  = UIColor(red: 101/255,
+                                                              green: 100/255,
+                                                              blue: 109/255,
+                                                              alpha: 1/5)
+            self.activityIndicator.frame = CGRect(x: .zero,
+                                                  y: .zero,
+                                                  width: self.view.frame.width,
+                                                  height: self.view.frame.height)
             self.view.addSubview(self.activityIndicator)
             self.activityIndicator.center = self.view.center
             self.activityIndicator.startAnimating()
         }
     }
-
-    
+    // 篩選縣市鄉鎮
     private func filterCountyTown(_ county: String,_ town: String) {
+        self.setActivityIndicator()
         NetworkManager.shared.fetchMaskCount { clinicInfo, countyTownInfo in
+                // 不拘 = 全抓
             if county == "不拘", town == "不拘" {
                 DispatchQueue.main.async {
                     self.clinicInfo = clinicInfo
                     self.maskCountTableView.reloadData()
+                    self.activityIndicator.stopAnimating()
                 }
+                // 未分類 = county 、 town 均為 ""
             } else if  county == "未分類", town == "未分類" {
                 DispatchQueue.main.async {
                     self.clinicInfo = clinicInfo.filter { $0.county == ""}
                     self.maskCountTableView.reloadData()
+                    self.activityIndicator.stopAnimating()
                 }
             } else {
+                // 按 county 、 town 做分類
                 DispatchQueue.main.async {
                     self.clinicInfo = clinicInfo.filter { $0.county == county}.filter{ $0.town == town }
                     self.maskCountTableView.reloadData()
+                    self.activityIndicator.stopAnimating()
                 }
             }
         }
+
+
+
     }
-    
+    // 設定 TableView
     private func setupMaskCountTableView() {
         maskCountTableView.dataSource = self
         maskCountTableView.delegate = self
         maskCountTableView.register(UINib(nibName: "ClinicTableViewCell", bundle: .main), forCellReuseIdentifier: "ClinicTableViewCell")
     }
-    
+    // 設定 PickerView
     private func setupCountyTownPickerView() {
         countyTownPickerView.dataSource = self
         countyTownPickerView.delegate = self
     }
-    
+    // 設定 Button 圓角、每日一句中文和英文
     private func configureUI() {
         selectedCountyTownButton.layer.cornerRadius = selectedCountyTownButton.frame.height / 2
         dailyPhraseinEnglishLabel.text = NetworkManager.shared.dailyPhraseInEnglish
         dailyPhraseInChinsesLabel.text = NetworkManager.shared.dailyPhraseInChinese
     }
-
+    // 設定元件 constraints
     private func setConstraints() {
         
         dailyPhraseInChinsesLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -137,7 +155,7 @@ class ViewController: UIViewController {
         NSLayoutConstraint.activate(selectedCountyTownButtonConstraints)
         
     }
-    
+    // 點擊新增 PickerView
     @IBAction func clickselectedCountyTownButton(_ sender: Any) {
         view.addSubview(countyTownPickerView)
         countyTownPickerView.backgroundColor = .white
@@ -149,11 +167,10 @@ class ViewController: UIViewController {
     }
     
 }
-
+// 設定 TableView 的 Delegate 和 DataSource
 extension ViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-//        return 20
         return self.clinicInfo.count
     }
     
@@ -173,7 +190,7 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
 }
-
+// 設定 PickerView 的 Delegate 和 DataSource
 extension ViewController: UIPickerViewDelegate, UIPickerViewDataSource {
     
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
@@ -181,10 +198,8 @@ extension ViewController: UIPickerViewDelegate, UIPickerViewDataSource {
     }
     
     func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
-        
         switch component {
         case 0:
-            
             return self.countyTownInfo.count
         case 1:
             return self.selectCounty.town.count
@@ -194,7 +209,6 @@ extension ViewController: UIPickerViewDelegate, UIPickerViewDataSource {
     }
     
     func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
-        
         switch component {
         case 0:
             return self.countyTownInfo[row].county
@@ -204,12 +218,13 @@ extension ViewController: UIPickerViewDelegate, UIPickerViewDataSource {
             return ""
         }
     }
-    
+    // 選擇會改變 selectedCountyTownButton 的文字
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
         switch component {
         case 0:
             index = row
             buttonTitle = self.countyTownInfo[row].county ?? ""
+            // 選完縣市，鄉鎮的選項要變更
             pickerView.reloadComponent(1)
         case 1:
             var title = buttonTitle

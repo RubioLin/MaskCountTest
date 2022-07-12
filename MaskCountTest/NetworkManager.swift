@@ -8,14 +8,13 @@
 import Foundation
 
 class NetworkManager {
-    
+    // 將 NetworkManager 做單例
     static let shared = NetworkManager()
     
     // Url
     private let dailyPhraseUrl = "https://tw.feature.appledaily.com/collection/dailyquote"
     private let maskCountUrl = "https://raw.githubusercontent.com/kiang/pharmacies/master/json/points.json"
     
-    //
     var dailyPhraseInChinese = ""
     var dailyPhraseInEnglish = ""
     var clinicInfo = [ClinicInfo]()
@@ -72,16 +71,16 @@ class NetworkManager {
         
         URLSession.shared.dataTask(with: URL(string: maskCountUrl)!) { data, response, error in
             guard error == nil else { return }
-            self.clinicInfo.removeAll()
+            self.clinicInfo.removeAll() // 初始化 filter 時會重複 call 避免造成資料重複
             DispatchQueue.global(qos: .default).async {
                 do {
                     var datas = try JSONDecoder().decode(MaskCount.self, from: data ?? Data()).features
+                    // 將資料做整理一樣縣市的放在一起
                     datas = datas?.sorted(by: { ($0.properties?.county)! > ($1.properties?.county)! })
                     
                     datas?.forEach { data in
                         // Data For TableView
                         self.clinicInfo.append(ClinicInfo(name: data.properties?.name, phone: data.properties?.phone, mask_adult: data.properties?.mask_adult, mask_child: data.properties?.mask_child, address: data.properties?.address, updated: data.properties?.updated, county: data.properties?.county, town: data.properties?.town))
-                        //                    self.clinicInfo = self.clinicInfo.sorted(by: { $0.county! > $1.county! })
                         
                         // Data For PickerView
                         let isContainCounty = self.countyTownInfo.contains { CountyTown in
