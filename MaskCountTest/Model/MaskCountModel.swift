@@ -51,3 +51,8 @@ struct ClinicInfo {
     var county: String?
     var town: String?
 }
+
+struct CountyTown {
+    var county: String?
+    var town: [String]
+}

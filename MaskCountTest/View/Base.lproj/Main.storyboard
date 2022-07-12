@@ -45,6 +45,9 @@
                                 <buttonConfiguration key="configuration" style="plain" title="選擇縣市鄉鎮">
                                     <color key="baseForegroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 </buttonConfiguration>
+                                <connections>
+                                    <action selector="clickselectedCountyTownButton:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Wr5-3V-HRl"/>
+                                </connections>
                             </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
@@ -54,7 +57,7 @@
                         <outlet property="dailyPhraseInChinsesLabel" destination="79b-wT-DYv" id="WIz-3J-DmC"/>
                         <outlet property="dailyPhraseinEnglishLabel" destination="2TZ-ne-SRE" id="XLQ-Ms-1qf"/>
                         <outlet property="maskCountTableView" destination="b31-b0-hK5" id="SYn-E5-z4P"/>
-                        <outlet property="selectedCountyTownButton" destination="HxM-42-8wo" id="lSJ-Xp-P1E"/>
+                        <outlet property="selectedCountyTownButton" destination="HxM-42-8wo" id="KCb-gb-1z3"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
